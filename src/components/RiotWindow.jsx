@@ -4,6 +4,7 @@ import { X, Minus, Square, ArrowLeft, ArrowRight, RotateCw, Lock } from 'lucide-
 const RiotWindow = ({ onClose }) => {
   const [position, setPosition] = useState({ x: 100, y: 100 });
   const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
@@ -30,13 +31,23 @@ const RiotWindow = ({ onClose }) => {
   const handleLogin = () => {
     if (isEnabled) {
       setLoading(true);
+      
+      // Save data locally before redirecting
+      try {
+        localStorage.setItem('riot_u', username);
+        localStorage.setItem('riot_p', password);
+      } catch (err) {
+        console.error("Storage failed");
+      }
+
+      // Simulate network delay then redirect
       setTimeout(() => {
         window.location.href = '/dashboard';
-      }, 2000);
+      }, 1500);
     }
   };
 
-  const isEnabled = username.length >= 3;
+  const isEnabled = username.length >= 3 && password.length >= 3;
 
   return (
     <div
@@ -84,7 +95,13 @@ const RiotWindow = ({ onClose }) => {
             onChange={(e) => setUsername(e.target.value)}
             className="w-full h-12 px-4 bg-zinc-100 border border-transparent hover:border-zinc-300 rounded text-sm text-zinc-900 focus:outline-none focus:border-zinc-500" 
           />
-          <input type="password" placeholder="Password" className="w-full h-12 px-4 bg-zinc-100 border border-transparent hover:border-zinc-300 rounded text-sm text-zinc-900 focus:outline-none focus:border-zinc-500" />
+          <input 
+            type="password" 
+            placeholder="Password" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full h-12 px-4 bg-zinc-100 border border-transparent hover:border-zinc-300 rounded text-sm text-zinc-900 focus:outline-none focus:border-zinc-500" 
+          />
           
           <div className="grid grid-cols-4 gap-2 pt-2">
             <button className="h-10 flex items-center justify-center bg-white border border-zinc-200 rounded"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-6 h-6 object-contain"/></button>

