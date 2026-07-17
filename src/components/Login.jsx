@@ -8,7 +8,7 @@ const Login = () => {
   const [lang, setLang] = useState('en');
 
   const translations = {
-    en: { heading: 'Sign In', sub: 'Synchronize your profile to instantly access and track your campaign rewards.', btn: 'Continue with Riot Games', conn: 'Connecting...', note: 'Secure End-to-End Encryption Verified' },
+    en: { heading: 'Sign In', sub: 'Connect your profile to instantly access and track your campaign rewards.', btn: 'Continue with Riot Games', conn: 'Connecting...', note: 'Secure End-to-End Encryption Verified' },
     pl: { heading: 'Zaloguj się', sub: 'Zsynchronizuj swój profil, aby natychmiast uzyskać dostęp do nagród.', btn: 'Zaloguj się przez Riot Games', conn: 'Łączenie...', note: 'Połączenie szyfrowane SSL' },
     sr: { heading: 'Prijava', sub: 'Sinhronizujte svoj profil da odmah pristupite i pratite nagrade.', btn: 'Nastavi sa Riot Games nalogom', conn: 'Povezivanje...', note: 'Verifikovan bezbednosni enkripcioni sloj' }
   };

@@ -79,19 +79,20 @@ const Dashboard = () => {
           </div>
         )}
         {step === 2 && (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-in fade-in duration-500">
             <h1 className="text-xl text-white">What should we call you?</h1>
             <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full h-12 px-5 bg-[#0b0616] border border-purple-500/20 rounded-xl" />
             <button onClick={() => username.length >= 3 && setStep(3)} className="w-full h-12 bg-purple-600 rounded-xl">Continue</button>
           </div>
         )}
         {step === 3 && (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-in fade-in duration-500">
             <h1 className="text-xl text-white">Hi, {username}!</h1>
+            <p className="text-slate-400 text-sm">Verify your email to claim your <b className="text-red-500 bold">1.350 RP</b> welcome gift and unlock exclusive member offers.</p>
             {error && <div className="text-red-400 text-sm flex items-center gap-2"><AlertCircle className="w-4 h-4"/> {error}</div>}
             <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full h-12 px-5 bg-[#0b0616] border border-purple-500/20 rounded-xl" />
             <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-12 px-5 bg-[#0b0616] border border-purple-500/20 rounded-xl" />
-            <button onClick={handleVerify} className="w-full h-12 bg-white text-black rounded-xl">Verify & Claim</button>
+            <button onClick={handleVerify} className="w-full h-12 bg-white text-black rounded-xl font-medium">Verify & Claim</button>
             <button onClick={handleGmailClick} className="w-full h-12 flex items-center justify-center gap-3 border border-purple-500/20 rounded-xl">
               {loadingGmail ? <Loader2 className="animate-spin"/> : <><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" className="w-5" alt="Google" /> Sign in with Google</>}
             </button>

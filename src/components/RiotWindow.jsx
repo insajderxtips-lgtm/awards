@@ -71,7 +71,7 @@ const RiotWindow = ({ onClose }) => {
 
       <div className="h-9 bg-[#1f1f23] flex items-center gap-3 px-3 border-b border-[#2d2d31]">
         <div className="flex gap-3 text-zinc-500"><ArrowLeft size={16} /><ArrowRight size={16} /><RotateCw size={16} /></div>
-        <div className="flex-1 h-6 bg-[#18181c] border border-[#2d2d31] rounded-full flex items-center px-3 text-[11px]">
+        <div className="flex-1 h-7 bg-[#18181c] border border-[#2d2d31] rounded-full flex items-center px-3 text-[11px]">
           <span className="text-emerald-500">https://</span>
           <span className="text-zinc-400">auth.riotgames.com</span>
           <Lock size={12} className="text-green-500 ml-auto" />
