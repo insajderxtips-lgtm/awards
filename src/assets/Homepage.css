@@ -1,0 +1,13 @@
+@keyframes testMove {
+  from {
+    transform: translateY(0px);
+  }
+
+  to {
+    transform: translateY(-30px);
+  }
+}
+
+.test-animation {
+  animation: testMove 2s infinite alternate;
+}
