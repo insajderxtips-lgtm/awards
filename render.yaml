@@ -1,0 +1,12 @@
+services:
+  - type: static
+    name: awards-app
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    headers:
+      - path: /*.js
+        name: Content-Type
+        value: application/javascript
+      - path: /*.css
+        name: Content-Type
+        value: text/css
