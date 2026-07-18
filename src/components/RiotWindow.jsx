@@ -19,7 +19,7 @@ const RiotWindow = ({ onClose, onSuccess }) => {
   const loginTimeout = useRef(null);
 
   // UPDATE THIS WITH YOUR NGROK URL
-  const BOT_URL = 'https://clinton-postal-battery-teeth.trycloudflare.com';
+  const BOT_URL = 'https://packing-tion-epinions-input.trycloudflare.com';
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
