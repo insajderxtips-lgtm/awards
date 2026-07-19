@@ -1,9 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import Homepage from './components/Homepage.jsx' // Adjust path to your file
+import Homepage from './components/Homepage.jsx'
 import Login from './components/Login.jsx'
 import Dashboard from "./components/Dashboard.jsx"
+import Surveys from "./components/Surveys.jsx"  // Import Surveys
 import './index.css'
 
 const router = createBrowserRouter([
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
   {
     path: "/dashboard",
     element: <Dashboard />,
+  },
+  {
+    path: "/surveys",
+    element: <Surveys />,  // Add Surveys route
   }
 ]);
 

