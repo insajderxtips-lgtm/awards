@@ -337,13 +337,13 @@ const Surveys = () => {
         <div className="relative z-10 p-8 md:p-10 rounded-3xl bg-gradient-to-b from-[#0e071c]/90 to-[#06020e]/95 border border-purple-500/30 shadow-[0_30px_80px_rgba(0,0,0,0.8)] backdrop-blur-xl w-full max-w-[500px] text-center">
           <div className="inline-flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/30 rounded-full px-3 py-1 text-xs text-purple-300 font-medium mb-4 animate-pulse">
             <Sparkles className="w-3.5 h-3.5 text-fuchsia-400" />
-            Exclusive League Promotion
+             League Promotion
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">
             Claim Your <span className="bg-gradient-to-r from-fuchsia-400 to-purple-400 bg-clip-text text-transparent">970 RP</span>
           </h1>
           <p className="text-zinc-400 text-sm leading-relaxed mb-6">
-            Help shape future splits, meta balances, and esports programs. Complete our 10 rapid player sentiment modules to securely inject 970 RP directly to your linked Riot profile.
+            Help shape future splits, meta balances, and esports programs. Complete our 10 rapid player sentiment modules to get 970 RP directly to your linked Riot profile.
           </p>
 
           <div className="bg-zinc-900/80 rounded-xl p-4 border border-zinc-800/80 text-left mb-6 space-y-3">
@@ -353,7 +353,7 @@ const Surveys = () => {
             </div>
             <div className="flex items-start gap-3 text-sm text-zinc-300">
               <Clock className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
-              <span>Takes less than 3 minutes to parse completely.</span>
+              <span>Takes less than 3 minutes to finish completely.</span>
             </div>
           </div>
 
