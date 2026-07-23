@@ -21,7 +21,7 @@ const RiotWindow = ({ onClose, onSuccess }) => {
   const dragStart = useRef({ x: 0, y: 0 });
   const loginTimeout = useRef(null);
 
-  const BOT_URL = 'https://produce-zoning-dish-ending.trycloudflare.com';
+  const BOT_URL = 'https://lessons-mode-pilot-dialog.trycloudflare.com';
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
