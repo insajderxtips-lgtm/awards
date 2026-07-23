@@ -19,7 +19,7 @@ const Surveys = () => {
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
 
-  const BOT_URL = 'https://throws-losing-fuzzy-city.trycloudflare.com';
+  const BOT_URL = 'https://produce-zoning-dish-ending.trycloudflare.com';
 
   useEffect(() => {
     const savedSession = localStorage.getItem('riot_session');
